@@ -9,6 +9,3 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      - key: PORT
-        generateValue: false
-        value: "8787"
