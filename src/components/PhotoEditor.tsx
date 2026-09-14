@@ -239,7 +239,7 @@ export function PhotoEditor() {
             <button type="button" className="btn" disabled={!canUndo} onClick={() => { restore(histIdx.current - 1); setStatus('Undid.') }}>Undo</button>
             <button type="button" className="btn" disabled={!canRedo} onClick={() => { restore(histIdx.current + 1); setStatus('Redid.') }}>Redo</button>
           </div>
-          <div className="btn-row">
+          <div className="btn-row export-actions">
             <button type="button" className="btn primary" disabled={!hasImage} onClick={async () => {
               try {
                 downloadBlob(await canvasToBlob(canvasRef.current!, 'image/png'), 'media-studio.png')

@@ -182,7 +182,7 @@ export function VideoEditor() {
 
         <section className="section">
           <h3>Export (Ice)</h3>
-          <div className="btn-row">
+          <div className="btn-row export-actions">
             <button type="button" className="btn primary" onClick={() => doExport('mp4')} disabled={!media?.id || busy}>Export MP4</button>
             <button type="button" className="btn" onClick={() => doExport('webm')} disabled={!media?.id || busy}>Export WebM</button>
           </div>
