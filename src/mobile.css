@@ -1,0 +1,91 @@
+/* Flips2.0 mobile / touch polish — imported after index.css */
+html,
+body,
+#root {
+  overflow-x: hidden;
+}
+
+.app-shell {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.editor-layout,
+.panel,
+.canvas-stage {
+  min-width: 0;
+}
+
+.btn,
+.file-btn {
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+  touch-action: manipulation;
+}
+
+.btn.primary,
+.file-btn.primary {
+  min-height: 48px;
+}
+
+.mode-switch button {
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+}
+
+.chip {
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  touch-action: manipulation;
+}
+
+input[type='text'],
+input[type='color'],
+input[type='range'] {
+  min-height: 44px;
+}
+
+.export-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-left: -1.1rem;
+  margin-right: -1.1rem;
+  margin-bottom: -0.5rem;
+  padding: 0.85rem 1.1rem 1rem;
+  background: linear-gradient(180deg, transparent, rgba(18, 21, 37, 0.97) 28%);
+  border-top: 1px solid var(--border);
+}
+
+.export-actions .btn.primary,
+.export-actions .file-btn.primary {
+  flex: 1 1 auto;
+  min-height: 48px;
+}
+
+.status {
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .canvas-stage {
+    min-height: 50vh;
+    padding: 0.85rem;
+  }
+
+  .edit-canvas {
+    max-height: 55vh;
+  }
+
+  .mode-switch {
+    width: 100%;
+  }
+
+  .mode-switch button {
+    flex: 1;
+  }
+
+  .panel {
+    padding-bottom: 1.75rem;
+  }
+}
