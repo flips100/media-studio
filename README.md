@@ -1,17 +1,35 @@
-# Media Studio (Frontend)
+# Media Studio
 
-Vite + React + TypeScript UI. **Flips = frontend** (this repo). **Ice = backend** (`ice/backend-api`, port **8787**).
+Vite + React + TypeScript UI with an Express + FFmpeg API. **Flips = frontend**, **Ice = backend**, **Flips2.0 = glue / deploy**.
 
 **Repo:** https://github.com/flips100/media-studio
 
-## Quick start
+## Quick start (local)
 
 ```bash
 npm install
-npm run dev
+npm run server   # API on :8787
+npm run dev      # UI; proxies /api and /files → :8787
 ```
 
-Start Ice API on `http://localhost:8787`. Vite proxies `/api` and `/files` there (see `vite.config.ts`).
+## Deploy
+
+### UI — GitHub Pages
+Preview URL (after Pages is enabled with **Source: GitHub Actions**):
+https://flips100.github.io/media-studio/
+
+Workflow: `.github/workflows/deploy-pages.yml` (builds on every push to `main`).
+
+One-time: Repo **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+Optional repo variable `VITE_API_URL` = your Render API origin (no trailing slash) so the hosted UI talks to production API.
+
+### API — Render
+Blueprint is `render.yaml` (`media-studio-api`, `npm run server`, health `/api/health`).
+
+1. [Render Dashboard](https://dashboard.render.com) → New → Blueprint → connect this repo
+2. Deploy `media-studio-api` from `main`
+3. Copy the service URL into GitHub Actions variable `VITE_API_URL` and into the FE if it reads that env
 
 ## Features
 
@@ -22,31 +40,19 @@ Start Ice API on `http://localhost:8787`. Vite proxies `/api` and `/files` there
 
 ### Video (Ice backend)
 - Upload → `POST /api/upload` (field `file`)
-- Preview + trim UI; apply trim → `POST /api/video/trim`
+- Preview + trim UI; apply trim → `POST /api/video/trim` (`start`/`end` or `startSec`/`endSec`)
 - Export → `POST /api/video/export` (`mp4` | `webm`)
-- Health check → `GET /api/health`
+- Health → `GET /api/health`
 - Static files via `/files/...`
-
-## Ice API (branch `ice/backend-api`)
-
-| Method | Path | Notes |
-|--------|------|--------|
-| `GET` | `/api/health` | Liveness |
-| `POST` | `/api/upload` | `multipart` field **`file`** → `{ id, url, type, filename, ... }` |
-| `GET` | `/api/media/:id` | Media metadata |
-| `POST` | `/api/video/trim` | JSON `{ id, start\|startSec, end\|endSec }` (+ optional overlay) → new media |
-| `POST` | `/api/video/export` | JSON `{ id, format?: "mp4"\|"webm" }` → `{ id, url }` |
-| `GET` | `/files/...` | Static media |
-
-Constants: `VIDEO_API` in `src/components/VideoEditor.tsx`.
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Dev server + proxy |
-| `npm run build` | Production build |
-| `npm run preview` | Preview build |
+| `npm run server` | Express API on :8787 |
+| `npm run build` | Production UI build |
+| `npm run preview` | Preview UI build |
 
 ## License
 
