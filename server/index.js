@@ -100,7 +100,7 @@ app.get('/api/media/:id', (req, res) => {
 })
 
 app.post('/api/video/trim', async (req, res) => {
-  const { id, startSec = 0, endSec } = req.body || {}
+  const { id, startSec, endSec, start, end } = req.body || {}
   const entry = media.get(id)
   if (!entry) {
     res.status(404).json({ error: 'Media id not found - upload first' })
@@ -110,13 +110,15 @@ app.post('/api/video/trim', async (req, res) => {
     res.status(400).json({ error: 'Trim requires a video upload' })
     return
   }
-  const start = Number(startSec)
-  const end = endSec == null ? null : Number(endSec)
-  if (!Number.isFinite(start) || start < 0) {
+  const startValue = startSec ?? start ?? 0
+  const endValue = endSec ?? end
+  const trimStart = Number(startValue)
+  const trimEnd = endValue == null ? null : Number(endValue)
+  if (!Number.isFinite(trimStart) || trimStart < 0) {
     res.status(400).json({ error: 'startSec must be a non-negative number' })
     return
   }
-  if (end != null && (!Number.isFinite(end) || end <= start)) {
+  if (trimEnd != null && (!Number.isFinite(trimEnd) || trimEnd <= trimStart)) {
     res.status(400).json({ error: 'endSec must be greater than startSec' })
     return
   }
@@ -126,7 +128,7 @@ app.post('/api/video/trim', async (req, res) => {
   const output = path.join(EXPORT_DIR, outName)
 
   try {
-    await trimVideo({ input, output, startSec: start, endSec: end })
+    await trimVideo({ input, output, startSec: trimStart, endSec: trimEnd })
     const outId = randomUUID()
     const outEntry = {
       id: outId,
