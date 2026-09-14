@@ -39,3 +39,11 @@ curl -s -F file=@./clip.mp4 http://localhost:8787/api/upload
 curl -s -X POST http://localhost:8787/api/video/trim -H 'content-type: application/json' -d '{"id":"MEDIA_ID","startSec":1.5,"endSec":8}'
 curl -s -X POST http://localhost:8787/api/video/export -H 'content-type: application/json' -d '{"id":"MEDIA_ID","format":"mp4"}'
 ```
+
+## PayPal
+
+Configure `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, and `PAYPAL_MODE` (`sandbox` or `live`).
+
+- `POST /api/paypal/create-order` — body: `{ amount?, currency?, description? }`
+- `POST /api/paypal/capture` — body: `{ orderID }`
+- `POST /api/paypal/webhook`
