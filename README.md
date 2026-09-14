@@ -1,6 +1,6 @@
 # Media Studio (Frontend)
 
-Browser UI for photo editing and video prep. **Flips = frontend** (this repo). **Ice = backend** video processing. **Flips2.0 = remaining product work.**
+Vite + React + TypeScript UI. **Flips = frontend** (this repo). **Ice = backend** (`ice/backend-api`, port **8787**).
 
 **Repo:** https://github.com/flips100/media-studio
 
@@ -11,57 +11,43 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL (usually `http://localhost:5173`).
+Start Ice API on `http://localhost:8787`. Vite proxies `/api` and `/files` there (see `vite.config.ts`).
 
-## What's included (frontend)
+## Features
 
-### Photo mode (client-side, fully usable)
-- New canvas / upload image
-- Brush, text, crop
-- Rotate ±90°, resize
-- Brightness / contrast / saturation + filters
-- Undo / redo
-- Export PNG / JPEG via canvas
+### Photo (client-side)
+- New canvas / upload, brush, text, crop
+- Rotate, resize, brightness/contrast/saturation, filters
+- Undo/redo, export PNG/JPEG
 
-### Video mode (UI + Ice API stubs)
-- Upload + HTML5 preview
-- Trim start/end + timeline scrub
-- Text overlay controls (preview on video)
-- **Export** calls Ice backend stubs (see below). Graceful message if API is down.
+### Video (Ice backend)
+- Upload → `POST /api/upload` (field `file`)
+- Preview + trim UI; apply trim → `POST /api/video/trim`
+- Export → `POST /api/video/export` (`mp4` | `webm`)
+- Health check → `GET /api/health`
+- Static files via `/files/...`
 
-## Ice backend — expected endpoints
+## Ice API (branch `ice/backend-api`)
 
-Wire these on the API (same origin or configure a Vite proxy):
+| Method | Path | Notes |
+|--------|------|--------|
+| `GET` | `/api/health` | Liveness |
+| `POST` | `/api/upload` | `multipart` field **`file`** → `{ id, url, type, filename, ... }` |
+| `GET` | `/api/media/:id` | Media metadata |
+| `POST` | `/api/video/trim` | JSON `{ id, start\|startSec, end\|endSec }` (+ optional overlay) → new media |
+| `POST` | `/api/video/export` | JSON `{ id, format?: "mp4"\|"webm" }` → `{ id, url }` |
+| `GET` | `/files/...` | Static media |
 
-| Method | Path | Body / notes |
-|--------|------|----------------|
-| `POST` | `/api/video/process` | `multipart/form-data`: `file`, `trimStart`, `trimEnd`, `overlay` (JSON string: `{ text, x, y, size, color }`). Returns `{ jobId }`. |
-| `GET` | `/api/video/status/:jobId` | Returns `{ status, progress }` (`queued` \| `processing` \| `done` \| `error`). |
-| `GET` | `/api/video/download/:jobId` | Returns processed video file (e.g. MP4/WebM). |
-
-Constants live in `src/components/VideoEditor.tsx` as `VIDEO_API`.
-
-Optional Vite proxy example:
-
-```ts
-// vite.config.ts
-server: { proxy: { '/api': 'http://localhost:3001' } }
-```
-
-## Stack
-
-Vite + React + TypeScript. MIT license.
+Constants: `VIDEO_API` in `src/components/VideoEditor.tsx`.
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Dev server |
+| `npm run dev` | Dev server + proxy |
 | `npm run build` | Production build |
 | `npm run preview` | Preview build |
 
-## Limits
+## License
 
-- Photo: large images scaled (max edge 1600px) on import.
-- Video processing is **not** done in-browser in this split; Ice owns encode/trim/export.
-- Desktop-first UI.
+MIT
