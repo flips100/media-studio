@@ -45,6 +45,16 @@ Blueprint is `render.yaml` (`media-studio-api`, `npm run server`, health `/api/h
 - Health → `GET /api/health`
 - Static files via `/files/...`
 
+## PayPal Checkout
+
+The frontend includes a Premium/Unlock checkout. Set the public PayPal client ID in the frontend environment to load the PayPal JS SDK:
+
+```bash
+VITE_PAYPAL_CLIENT_ID=your-public-client-id
+```
+
+After approval, the UI posts `{ "orderID": "..." }` to `POST /api/paypal/capture`. If that Ice endpoint is not available, the UI reports the capture failure without breaking the editor. The PayPal merchant email `Seddorkennedy@gmail.com` is settlement-side configuration owned by Ice; the frontend only needs the public Client ID. Never put a PayPal Client Secret in the client bundle or source.
+
 ## Scripts
 
 | Command | Description |
