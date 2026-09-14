@@ -10,6 +10,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { exportVideo, trimVideo } from './ffmpeg.js'
+import { captureOrder, createOrder, credentialsOk } from './paypal.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.join(__dirname, '..')
@@ -65,6 +66,7 @@ app.get('/api/health', (_req, res) => {
     ok: true,
     service: 'media-studio-api',
     uptimeSec: Math.round(process.uptime()),
+    paypalConfigured: credentialsOk(),
   })
 })
 
@@ -204,6 +206,62 @@ app.post('/api/video/export', async (req, res) => {
   }
 })
 
+
+app.post('/api/paypal/create-order', async (req, res) => {
+  if (!credentialsOk()) {
+    res.status(503).json({
+      error: 'PayPal not configured',
+      hint: 'Set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET on the server',
+    })
+    return
+  }
+  const { amount = '4.99', currency = 'USD', description } = req.body || {}
+  try {
+    const order = await createOrder({ amount, currency, description })
+    res.status(201).json({ id: order.id, status: order.status, order })
+  } catch (err) {
+    console.error(err)
+    res.status(502).json({ error: 'PayPal create-order failed', detail: String(err?.message || err) })
+  }
+})
+
+app.post('/api/paypal/capture', async (req, res) => {
+  if (!credentialsOk()) {
+    res.status(503).json({
+      error: 'PayPal not configured',
+      hint: 'Set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET on the server',
+    })
+    return
+  }
+  const orderId = req.body?.orderID || req.body?.orderId || req.body?.id
+  if (!orderId) {
+    res.status(400).json({ error: 'Missing orderID' })
+    return
+  }
+  try {
+    const capture = await captureOrder(String(orderId))
+    const status = capture?.status
+    const captureId =
+      capture?.purchase_units?.[0]?.payments?.captures?.[0]?.id || null
+    res.json({
+      ok: status === 'COMPLETED',
+      status,
+      orderId,
+      captureId,
+      capture,
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(502).json({ error: 'PayPal capture failed', detail: String(err?.message || err) })
+  }
+})
+
+app.post('/api/paypal/webhook', (req, res) => {
+  // Signature verification can be added once webhook ID is configured.
+  console.log('[paypal webhook]', JSON.stringify(req.body)?.slice(0, 500))
+  res.sendStatus(200)
+})
+
 app.listen(PORT, () => {
   console.log(`[media-studio-api] http://localhost:${PORT}`)
   console.log('  health  GET  /api/health')
@@ -211,4 +269,6 @@ app.listen(PORT, () => {
   console.log('  media   GET  /api/media/:id')
   console.log('  trim    POST /api/video/trim')
   console.log('  export  POST /api/video/export')
+  console.log('  paypal  POST /api/paypal/create-order')
+  console.log('  paypal  POST /api/paypal/capture')
 })
