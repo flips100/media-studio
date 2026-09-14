@@ -5,10 +5,7 @@ const PREMIUM_PRICE = '9.99'
 const PAYPAL_SCRIPT_ID = 'paypal-js-sdk'
 
 type PayPalButtonOptions = {
-  createOrder: (
-    data: unknown,
-    actions: { order: { create: (details: { purchase_units: Array<{ amount: { currency_code: string; value: string } }> }) => Promise<string> } },
-  ) => Promise<string>
+  createOrder: (data: unknown, actions: unknown) => Promise<string>
   onApprove: (data: { orderID?: string }) => Promise<void>
   onCancel: () => void
   onError: (error: unknown) => void
@@ -72,9 +69,36 @@ export function PayPalCheckout() {
     container.replaceChildren()
 
     const buttons = window.paypal.Buttons({
-      createOrder: async (_data, actions) => actions.order.create({
-        purchase_units: [{ amount: { currency_code: 'USD', value: PREMIUM_PRICE } }],
-      }),
+      createOrder: async () => {
+        setStatus('Creating your secure PayPal order…')
+        try {
+          const response = await fetch('/api/paypal/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: PREMIUM_PRICE,
+              currency: 'USD',
+              description: 'Media Studio Premium',
+            }),
+          })
+          const payload = await response.json() as { id?: unknown; status?: unknown }
+          if (!response.ok) {
+            const detail = typeof payload.status === 'string'
+              ? payload.status
+              : `Create-order API returned ${response.status}`
+            throw new Error(detail)
+          }
+          if (typeof payload.id !== 'string' || !payload.id) {
+            throw new Error('Create-order API returned an invalid order ID.')
+          }
+          setStatus('Order created. Complete your payment with PayPal.')
+          return payload.id
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : 'create-order service unavailable'
+          setStatus(`Could not start PayPal checkout (${detail}).`)
+          throw error
+        }
+      },
       onApprove: async (data) => {
         if (!data.orderID) {
           setStatus('PayPal approved the payment, but no order ID was returned.')
