@@ -3,8 +3,13 @@ export function downloadBlob(blob: Blob, filename: string) {
   const a = document.createElement('a')
   a.href = url
   a.download = filename
+  // Mobile Safari often ignores click() unless the anchor is in the DOM.
+  a.style.display = 'none'
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  a.remove()
+  // Delay revoke so Safari can start the download.
+  window.setTimeout(() => URL.revokeObjectURL(url), 2500)
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality = 0.92): Promise<Blob> {
@@ -15,4 +20,10 @@ export function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality = 
       quality,
     )
   })
+}
+
+export async function downloadFromUrl(url: string, filename: string) {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error('Download failed (' + res.status + ')')
+  downloadBlob(await res.blob(), filename)
 }
