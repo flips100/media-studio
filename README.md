@@ -1,32 +1,8 @@
-# Media Studio
+# Media Studio (Frontend)
 
-Browser-based photo and video editor. Create canvases, edit images, trim videos, add overlays, and export — all client-side. No uploads to a server; media stays in your browser.
+Browser UI for photo editing and video prep. **Flips = frontend** (this repo). **Ice = backend** video processing. **Flips2.0 = remaining product work.**
 
-**Live repo:** [https://github.com/flips100/media-studio](https://github.com/flips100/media-studio)
-
-## Features
-
-### Photo mode
-- New blank canvases (1280×720 or square) or upload images
-- Tools: select, brush, text, crop
-- Transform: rotate ±90°, resize
-- Adjustments: brightness, contrast, saturation (live preview + bake into pixels)
-- Filters: grayscale, sepia, invert, warm, cool, vintage, contrast+
-- Undo / redo (pixel history)
-- Export PNG or JPEG
-
-### Video mode
-- Upload video (browser-decodable formats)
-- Trim start / end with timeline scrubber
-- Play within the trim range
-- Text overlay (content, size, color, position)
-- Export trimmed clip with overlay via **MediaRecorder** + canvas (`captureStream`) — typically **WebM** in Chrome
-
-## Stack
-
-- [Vite](https://vitejs.dev/) + [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- HTML Canvas for photo editing and video compositing
-- MediaRecorder for in-browser video export (no ffmpeg.wasm dependency)
+**Repo:** https://github.com/flips100/media-studio
 
 ## Quick start
 
@@ -35,24 +11,57 @@ npm install
 npm run dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`).
+Open the Vite URL (usually `http://localhost:5173`).
 
-### Scripts
+## What's included (frontend)
 
-| Command           | Description              |
-|-------------------|--------------------------|
-| `npm run dev`     | Start dev server         |
-| `npm run build`   | Typecheck + production build |
-| `npm run preview` | Preview production build |
-| `npm run lint`    | Run oxlint               |
+### Photo mode (client-side, fully usable)
+- New canvas / upload image
+- Brush, text, crop
+- Rotate ±90°, resize
+- Brightness / contrast / saturation + filters
+- Undo / redo
+- Export PNG / JPEG via canvas
 
-## Limits & notes
+### Video mode (UI + Ice API stubs)
+- Upload + HTML5 preview
+- Trim start/end + timeline scrub
+- Text overlay controls (preview on video)
+- **Export** calls Ice backend stubs (see below). Graceful message if API is down.
 
-- **Photo:** Large images are scaled down on import (max edge 1600px) for performance. History stores ImageData snapshots (capped). Crop / brush / text operate on the current pixel buffer.
-- **Video:** Export relies on `MediaRecorder` and `canvas.captureStream`. **Chrome** is the most reliable target. Output is usually WebM (VP8/VP9), not MP4, unless the browser advertises MP4 recording support. Audio is included when the browser allows capturing audio tracks from the video element.
-- **Privacy:** Processing is local to the browser; nothing is sent to a backend by this app.
-- Desktop-first UI; usable on smaller screens with a stacked layout.
+## Ice backend — expected endpoints
 
-## License
+Wire these on the API (same origin or configure a Vite proxy):
 
-MIT — see [LICENSE](./LICENSE).
+| Method | Path | Body / notes |
+|--------|------|----------------|
+| `POST` | `/api/video/process` | `multipart/form-data`: `file`, `trimStart`, `trimEnd`, `overlay` (JSON string: `{ text, x, y, size, color }`). Returns `{ jobId }`. |
+| `GET` | `/api/video/status/:jobId` | Returns `{ status, progress }` (`queued` \| `processing` \| `done` \| `error`). |
+| `GET` | `/api/video/download/:jobId` | Returns processed video file (e.g. MP4/WebM). |
+
+Constants live in `src/components/VideoEditor.tsx` as `VIDEO_API`.
+
+Optional Vite proxy example:
+
+```ts
+// vite.config.ts
+server: { proxy: { '/api': 'http://localhost:3001' } }
+```
+
+## Stack
+
+Vite + React + TypeScript. MIT license.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run preview` | Preview build |
+
+## Limits
+
+- Photo: large images scaled (max edge 1600px) on import.
+- Video processing is **not** done in-browser in this split; Ice owns encode/trim/export.
+- Desktop-first UI.
