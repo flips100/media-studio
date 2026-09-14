@@ -215,7 +215,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
     })
     return
   }
-  const { amount = '4.99', currency = 'USD', description } = req.body || {}
+  const { amount = '9.99', currency = 'USD', description } = req.body || {}
   try {
     const order = await createOrder({ amount, currency, description })
     res.status(201).json({ id: order.id, status: order.status, order })
