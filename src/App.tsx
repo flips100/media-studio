@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { PhotoEditor } from './components/PhotoEditor'
+import { PayPalCheckout } from './components/PayPalCheckout'
 import { VideoEditor } from './components/VideoEditor'
 
 type Mode = 'photo' | 'video'
@@ -40,6 +41,7 @@ export default function App() {
           </button>
         </nav>
       </header>
+      <PayPalCheckout />
       {mode === 'photo' ? <PhotoEditor /> : <VideoEditor />}
     </div>
   )
